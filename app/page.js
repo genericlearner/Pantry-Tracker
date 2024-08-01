@@ -1,58 +1,79 @@
-import {Box,Stack, Typography} from '@mui/material'
+'use client'
 
+import {useState,useEffect} from 'react'
+//import {firestore} from 'firebase'
+import {Box, Stack, Typography} from '@mui/material'
+import {query, collection, getDocs, docRef, setDoc} from 'firebase/firestore'
+import { firestore } from './firebase'
 
-
-const item =[
-  'tomator',
-  'potato',
-  'Onion',
-  'Cucumber',
-  'potato',
-  'Onion',
-  'Cucumber',
-  'Onion',
-  'Cucumber',
-  'potato',
-  'Onion',
-  'Cucumber',
-]
 
 export default function Home() {
+  const [inventory, setInventory] = useState([])
+  const [open, setOpen] = useState(false)
+  const [itemName, setItemName] = useState('')
+
+  const updateInventory = async () => {
+    const snapshot = query(collection(firestore, 'Inventory'))
+    const docs = await getDocs(snapshot)
+    const inventoryList = []
+    docs.forEach((doc)=>{
+      inventoryList.push({
+        name: doc.id,
+        ...doc.data(),
+      })
+
+    })
+    setInventory(inventoryList)
+    console.log(inventoryList)
+  }
+  const addItem = async(item) =>{
+    const docRef = doc(collection(firestore,'inventory'),item)
+    const docSnap = await getDoc(docRef)
+
+    if(docSnap.exists()){
+      const {quantity} = docSnap.data()
+        await setDoc(docRef, {quantity: quantity+1})
+      }
+    else{
+      await setDoc(docRef, {quantity: 1})
+    }
+    
+    await updateInventory()
+  }
+  const removeItem = async(item) =>{
+    const docRef = doc(collection(firestore,'inventory'),item)
+    const docSnap = await getDoc(docRef)
+
+    if(docSnap.exists()){
+      const {quantity} = docSnap.data()
+      if(quantity === 1){
+        await deleteDoc(docRef)
+      }
+      else {
+        await setDoc(docRef, {quantity: quantity-1})
+      }
+    }
+    await updateInventory()
+  }
+
+  useEffect(()=>{
+    updateInventory()
+  },[])
   return (
+    <Box>
+      <Typography variant="h1">Inventory Management</Typography>
+      {
+        inventory.forEach((item)=>{
 
-    <Box 
-    width= "100vw"
-    height="100vh"
-    display={'flex'}
-    justifyContent={'center'}
-    flexDirection={'column'}
-    alignItems={'center'}>
-      <Box border={'1px solid #333'}>
-      <Box width="800px" height="100px" bgcolor={'#ADD8E6'} display={'flex'} justifyContent={'center'} alignItems={'center'}>
-        <Typography variant={'h2'} color={'#333'} textAlign={'center'}>
-          Pantry Items
-
-        </Typography>
-      </Box>
-      <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
-      {item.map((i)=>(
-          <Box 
-            key={i}
-            width="100%"
-            height="300px"
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            bgcolor={'#f0f0f0'}
-          >
-            <Typography variant={'h4'} color={'#333'} textAlign={'center'} >
-            {i.charAt(0).toUpperCase()+i.slice(1)}
-            </Typography>
-            </Box>
-            
-        ))}
-      </Stack>
-      </Box>
+          return(<Box>
+          
+          {item.name}
+          {item.count}
+          </Box>)
+        })
+      }
+      
+    
     </Box>
    
   );
