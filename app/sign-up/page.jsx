@@ -2,28 +2,27 @@
 'use client'
 import { useState } from 'react';
 import { Container, TextField, Button, Typography, Paper, Box } from '@mui/material';
-import {useCreateUserWithEmailAndPassword} from 'react-firebase-hooks/auth'
-import {auth} from '@/app/firebase'
+import {useCreateUserWithEmailAndPassword} from 'react-firebase-hooks/auth';
+import {auth} from '@/app/firebase';
+import { useRouter } from 'next/navigation';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [createUserWithEmailAndPassowrd] = useCreateUserWithEmailAndPassword(auth);
+  const router = useRouter();
 
 
   const handleSignUp = async() => {
     try {
-        const res = await createUserWithEmailAndPassowrd(email, password);
-        
+        const res = await createUserWithEmailAndPassowrd(email, password);  
+        if(res){
+        router.push('/');}
+          
         console.log({res})
         setEmail('');
         setPassword('')
-        if (res) {
-            // If the sign-in is successful, navigate to home page
-            router.push('/sign-in');
-          }
-
     }catch(e){
         console.error(e)
     }
@@ -42,7 +41,7 @@ const SignupPage = () => {
     <Container component="main" maxWidth="xs">
       <Paper elevation={3} style={{ padding: '2rem' }}>
         <Typography component="h1" variant="h5" align="center">
-          Signup
+          Sign-Up
         </Typography>
         {error && (
           <Typography color="error" variant="body2" align="center" gutterBottom>
